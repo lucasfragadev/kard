@@ -3,19 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <title>Kard - Login</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center">
-    <div class="w-full max-w-md bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700">
-        <h1 class="text-3xl font-bold text-center mb-8 text-indigo-400">Kard<span class="text-white">.</span></h1>
+<body class="bg-gray-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen flex items-center justify-center transition-colors duration-300">
+    <div class="w-full max-w-md bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700">
+        
+        <div class="absolute top-4 right-4">
+            <button id="theme-toggle" class="text-2xl p-2 hover:scale-110 transition-transform">🌙</button>
+        </div>
+
+        <h1 class="text-3xl font-bold text-center mb-8 text-indigo-600 dark:text-indigo-400">Kard<span class="text-slate-800 dark:text-white">.</span></h1>
+        
         <form id="login-form" class="space-y-4">
-            <input type="email" id="email" placeholder="E-mail" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500" required>
-            <input type="password" id="password" placeholder="Senha" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500" required>
-            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-lg font-bold transition-all">Entrar</button>
+            <input type="email" id="email" placeholder="E-mail" 
+                class="w-full bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-colors" required>
+            
+            <input type="password" id="password" placeholder="Senha" 
+                class="w-full bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-colors" required>
+            
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-lg font-bold transition-all shadow-md">Entrar</button>
         </form>
-        <p id="error-msg" class="text-red-400 text-sm mt-4 text-center hidden"></p>
+        
+        <p id="error-msg" class="text-red-500 dark:text-red-400 text-sm mt-4 text-center hidden"></p>
+        
+        <div class="mt-6 text-center border-t border-slate-200 dark:border-slate-700 pt-6">
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Ainda não tem conta?</p>
+            <a href="registro.html" class="text-indigo-600 dark:text-indigo-400 hover:underline font-bold text-sm">Criar conta grátis</a>
+        </div>
     </div>
     <script src="js/auth.js"></script>
+    <script src="js/theme.js"></script>
 </body>
 </html>
