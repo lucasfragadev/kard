@@ -5,7 +5,7 @@ import {
   alterarSenha,
   excluirConta
 } from '../services/auth.service.js';
-import { logger } from '../utils/logger.js';
+import logger from '../utils/logger.js';
 
 // Registro de usuário
 export const registro = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

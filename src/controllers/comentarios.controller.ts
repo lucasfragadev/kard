@@ -11,7 +11,8 @@ import {
 // Listar comentários de uma atividade
 export async function listar(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const atividadeId = parseInt(req.params.atividadeId);
+    const atividadeIdParam = req.params.atividadeId;
+    const atividadeId = parseInt(Array.isArray(atividadeIdParam) ? atividadeIdParam[0] : atividadeIdParam);
 
     if (isNaN(atividadeId)) {
       res.status(400).json({
@@ -37,7 +38,8 @@ export async function listar(req: Request, res: Response, next: NextFunction): P
 export async function criar(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const usuarioId = (req as any).user.id;
-    const atividadeId = parseInt(req.params.atividadeId);
+    const atividadeIdParam = req.params.atividadeId;
+    const atividadeId = parseInt(Array.isArray(atividadeIdParam) ? atividadeIdParam[0] : atividadeIdParam);
     const { conteudo } = req.body;
 
     // Validações
@@ -85,7 +87,8 @@ export async function criar(req: Request, res: Response, next: NextFunction): Pr
 export async function atualizar(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const usuarioId = (req as any).user.id;
-    const comentarioId = parseInt(req.params.id);
+    const comentarioIdParam = req.params.id;
+    const comentarioId = parseInt(Array.isArray(comentarioIdParam) ? comentarioIdParam[0] : comentarioIdParam);
     const { conteudo } = req.body;
 
     // Validações
@@ -137,7 +140,8 @@ export async function atualizar(req: Request, res: Response, next: NextFunction)
 export async function remover(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const usuarioId = (req as any).user.id;
-    const comentarioId = parseInt(req.params.id);
+    const comentarioIdParam = req.params.id;
+    const comentarioId = parseInt(Array.isArray(comentarioIdParam) ? comentarioIdParam[0] : comentarioIdParam);
 
     if (isNaN(comentarioId)) {
       res.status(400).json({
@@ -169,7 +173,8 @@ export async function remover(req: Request, res: Response, next: NextFunction): 
 // Contar comentários de uma atividade
 export async function contar(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const atividadeId = parseInt(req.params.atividadeId);
+    const atividadeIdParam = req.params.atividadeId;
+    const atividadeId = parseInt(Array.isArray(atividadeIdParam) ? atividadeIdParam[0] : atividadeIdParam);
 
     if (isNaN(atividadeId)) {
       res.status(400).json({

@@ -1,8 +1,3 @@
-/**
- * DTOs para o módulo de perfil
- * Define interfaces para tipagem forte de entrada e saída de dados
- */
-
 export interface UpdateProfileDto {
   nome?: string;
   foto?: string | null;
@@ -37,4 +32,9 @@ export interface ProfilePreferences {
     deadline?: boolean;
   };
   language?: string;
+}
+
+export interface ValidationResult {
+  valid: boolean;
+  errors?: string[];
 }
