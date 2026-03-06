@@ -20,7 +20,6 @@ export const listar = async (req: Request, res: Response, next: NextFunction) =>
     const usuarioId = (req as any).user.id;
     const { categoria, finalizada, importante, data } = req.query;
 
-    // Garantir que os valores sejam strings
     const categoriaStr = Array.isArray(categoria) ? categoria[0] : categoria;
     const finalizadaStr = Array.isArray(finalizada) ? finalizada[0] : finalizada;
     const importanteStr = Array.isArray(importante) ? importante[0] : importante;
@@ -85,7 +84,8 @@ export const criar = async (req: Request, res: Response, next: NextFunction) => 
 export const atualizar = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const usuarioId = (req as any).user.id;
-    const atividadeId = parseInt(req.params.id);
+    const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const atividadeId = parseInt(idParam);
     const { data, categoria, descricao, importante } = req.body;
 
     const validacao = validarAtualizacaoAtividade({ data, categoria, descricao, importante });
@@ -126,7 +126,8 @@ export const atualizar = async (req: Request, res: Response, next: NextFunction)
 export const remover = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const usuarioId = (req as any).user.id;
-    const atividadeId = parseInt(req.params.id);
+    const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const atividadeId = parseInt(idParam);
 
     const removida = await removerAtividade(atividadeId, usuarioId);
 
@@ -150,7 +151,8 @@ export const remover = async (req: Request, res: Response, next: NextFunction) =
 export const toggleStatus = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const usuarioId = (req as any).user.id;
-    const atividadeId = parseInt(req.params.id);
+    const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const atividadeId = parseInt(idParam);
 
     const atividadeAtualizada = await toggleStatusAtividade(atividadeId, usuarioId);
 
@@ -175,7 +177,8 @@ export const toggleStatus = async (req: Request, res: Response, next: NextFuncti
 export const togglePrioridade = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const usuarioId = (req as any).user.id;
-    const atividadeId = parseInt(req.params.id);
+    const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const atividadeId = parseInt(idParam);
 
     const atividadeAtualizada = await togglePrioridadeAtividade(atividadeId, usuarioId);
 
@@ -225,10 +228,10 @@ export const exportar = async (req: Request, res: Response, next: NextFunction) 
   try {
     const usuarioId = (req as any).user.id;
     const formatQuery = req.query.format;
-    const format = (Array.isArray(formatQuery) ? formatQuery[0] : formatQuery)?.toLowerCase() || 'json';
+    const formatStr = Array.isArray(formatQuery) ? formatQuery[0] : formatQuery;
+    const format = (typeof formatStr === 'string' ? formatStr.toLowerCase() : 'json');
     const { categoria, finalizada, importante, data } = req.query;
 
-    // Garantir que os valores sejam strings
     const categoriaStr = Array.isArray(categoria) ? categoria[0] : categoria;
     const finalizadaStr = Array.isArray(finalizada) ? finalizada[0] : finalizada;
     const importanteStr = Array.isArray(importante) ? importante[0] : importante;
