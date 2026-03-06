@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="description" content="Kard Dashboard - Visualize suas estatísticas e produtividade. Acompanhe o progresso das suas tarefas.">
+    <meta name="keywords" content="dashboard, estatísticas, produtividade, kard">
+    
+    <meta property="og:url" content="https://kard-app.onrender.com/dashboard.html">
+    <meta property="og:title" content="Kard - Dashboard de Estatísticas">
+    
+    <meta name="twitter:url" content="https://kard-app.onrender.com/dashboard.html">
+    <meta name="twitter:title" content="Kard - Dashboard de Estatísticas">
+    
+    <link rel="canonical" href="https://kard-app.onrender.com/dashboard.html">
+    
+    <title>Kard - Dashboard de Estatísticas</title>
+    <link href="css/style.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-2xl flex flex-col items-center gap-4">
+            <div class="spinner"></div>
+            <p class="text-slate-700 dark:text-slate-300 font-medium">Carregando estatísticas...</p>
+        </div>
+    </div>
+
+    <div class="min-h-screen p-4 md:p-8">
+        <div class="max-w-6xl mx-auto">
+            <header class="flex justify-between items-center mb-8 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg">
+                <h1 class="text-4xl font-bold text-indigo-600 dark:text-indigo-400">Dashboard</h1>
+                <div class="flex gap-2 items-center">
+                    <a href="/index.html" class="text-2xl p-2 hover:scale-110 transition-transform" title="Voltar para tarefas" aria-label="Tarefas">📋</a>
+                    <button id="theme-toggle" class="text-2xl p-2 hover:scale-110 transition-transform">🌙</button>
+                </div>
+            </header>
+
+            <section class="mb-6 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg transition-colors duration-300">
+                <h2 class="text-lg font-bold text-indigo-600 dark:text-indigo-400 mb-4">Período de Análise</h2>
+                <div class="flex gap-2 flex-wrap">
+                    <button data-period="7" class="period-btn bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm transition-colors hover:bg-indigo-500">
+                        7 dias
+                    </button>
+                    <button data-period="30" class="period-btn bg-gray-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg text-sm transition-colors hover:bg-gray-300 dark:hover:bg-slate-600">
+                        30 dias
+                    </button>
+                    <button data-period="90" class="period-btn bg-gray-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg text-sm transition-colors hover:bg-gray-300 dark:hover:bg-slate-600">
+                        90 dias
+                    </button>
+                    <button data-period="all" class="period-btn bg-gray-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg text-sm transition-colors hover:bg-gray-300 dark:hover:bg-slate-600">
+                        Tudo
+                    </button>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg">
+                    <h3 class="text-sm text-slate-500 dark:text-slate-400 font-medium uppercase">Total de Tarefas</h3>
+                    <p class="text-3xl font-bold text-indigo-600 dark:text-indigo-400" id="total-tasks">0</p>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg">
+                    <h3 class="text-sm text-slate-500 dark:text-slate-400 font-medium uppercase">Concluídas</h3>
+                    <p class="text-3xl font-bold text-green-600 dark:text-green-400" id="completed-tasks">0</p>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg">
+                    <h3 class="text-sm text-slate-500 dark:text-slate-400 font-medium uppercase">Pendentes</h3>
+                    <p class="text-3xl font-bold text-yellow-600 dark:text-yellow-400" id="pending-tasks">0</p>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg">
+                    <h3 class="text-sm text-slate-500 dark:text-slate-400 font-medium uppercase">Alta Prioridade</h3>
+                    <p class="text-3xl font-bold text-red-600 dark:text-red-400" id="priority-tasks">0</p>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg">
+                    <h3 class="text-lg font-bold text-indigo-600 dark:text-indigo-400 mb-4">Status das Tarefas</h3>
+                    <canvas id="status-chart"></canvas>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg">
+                    <h3 class="text-lg font-bold text-indigo-600 dark:text-indigo-400 mb-4">Por Categoria</h3>
+                    <canvas id="category-chart"></canvas>
+                </div>
+            </section>
+
+            <section class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg mb-6">
+                <h3 class="text-lg font-bold text-indigo-600 dark:text-indigo-400 mb-4">Produtividade</h3>
+                <canvas id="productivity-chart"></canvas>
+            </section>
+
+            <section class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg">
+                <h3 class="text-lg font-bold text-indigo-600 dark:text-indigo-400 mb-4">Tendência de Conclusão</h3>
+                <canvas id="completion-trend-chart"></canvas>
+            </section>
+        </div>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+    <script src="js/theme.js"></script>
+</body>
+</html>

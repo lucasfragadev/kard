@@ -1,3 +1,136 @@
-DATABASE_URL=
-JWT_SECRET=
-PORT=
+# ============================================
+# KARD - CONFIGURAÇÕES DE AMBIENTE
+# ============================================
+# Copie este arquivo para .env e preencha com suas configurações
+
+# ============================================
+# BANCO DE DADOS
+# ============================================
+# URL de conexão com PostgreSQL
+# Formato: postgresql://usuario:senha@host:porta/nome_banco
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/kard
+
+# ============================================
+# SERVIDOR
+# ============================================
+# Porta onde o servidor irá rodar
+PORT=3000
+
+# Ambiente de execução (development, production, test)
+NODE_ENV=development
+
+# Versão da API
+API_VERSION=1.0.0
+
+# ============================================
+# AUTENTICAÇÃO JWT
+# ============================================
+# Chave secreta para geração de tokens JWT (mínimo 32 caracteres)
+# Gere uma chave forte: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+JWT_SECRET=sua_chave_secreta_muito_segura_aqui_minimo_32_caracteres
+
+# Chave secreta para refresh tokens (mínimo 32 caracteres)
+JWT_REFRESH_SECRET=sua_chave_refresh_secreta_muito_segura_aqui_minimo_32_caracteres
+
+# Tempo de expiração do token de acesso (ex: 1h, 15m, 7d)
+JWT_EXPIRES_IN=1h
+
+# Tempo de expiração do refresh token (ex: 7d, 30d)
+JWT_REFRESH_EXPIRES_IN=7d
+
+# ============================================
+# EMAIL (SMTP)
+# ============================================
+# Configurações do servidor SMTP para envio de emails
+# Exemplos de provedores populares:
+# Gmail: smtp.gmail.com (porta 587)
+# Outlook: smtp-mail.outlook.com (porta 587)
+# SendGrid: smtp.sendgrid.net (porta 587)
+# Mailgun: smtp.mailgun.org (porta 587)
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=seu_email@gmail.com
+SMTP_PASS=sua_senha_ou_app_password
+SMTP_FROM_NAME=Kard
+
+# Habilitar/desabilitar TLS (true/false)
+SMTP_SECURE=false
+
+# ============================================
+# FRONTEND
+# ============================================
+# URL base do frontend (usada para links em emails)
+FRONTEND_URL=http://localhost:3000
+
+# ============================================
+# UPLOADS
+# ============================================
+# Tamanho máximo de upload em MB
+MAX_FILE_SIZE=10
+
+# Diretório para armazenar uploads
+UPLOAD_DIR=uploads
+
+# ============================================
+# CACHE
+# ============================================
+# Tempo de vida do cache em milissegundos (padrão: 60000 = 1 minuto)
+CACHE_TTL=60000
+
+# ============================================
+# RATE LIMITING
+# ============================================
+# Limite de requisições por minuto para rotas gerais
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX_REQUESTS=100
+
+# Limite de tentativas de login por hora
+AUTH_RATE_LIMIT_WINDOW_MS=3600000
+AUTH_RATE_LIMIT_MAX_REQUESTS=5
+
+# ============================================
+# LOGS
+# ============================================
+# Nível de logs (error, warn, info, http, verbose, debug, silly)
+LOG_LEVEL=info
+
+# ============================================
+# CORS
+# ============================================
+# Origens permitidas para CORS (separadas por vírgula)
+# Exemplo: http://localhost:3000,https://meusite.com
+CORS_ORIGIN=http://localhost:3000
+
+# ============================================
+# SEGURANÇA
+# ============================================
+# Tempo de validade do token de reset de senha (em horas)
+RESET_TOKEN_EXPIRES_IN=1
+
+# Intervalo mínimo entre solicitações de reset (em minutos)
+RESET_REQUEST_INTERVAL=15
+
+# ============================================
+# NOTIFICAÇÕES
+# ============================================
+# Tempo de antecedência para notificações de prazo (em minutos)
+NOTIFICATION_ADVANCE_TIME=30
+
+# ============================================
+# BACKUP
+# ============================================
+# Diretório para armazenar backups
+BACKUP_DIR=backups
+
+# Frequência de backup automático (em horas, 0 para desabilitar)
+BACKUP_FREQUENCY=24
+
+# ============================================
+# DESENVOLVIMENTO
+# ============================================
+# Habilitar documentação Swagger em produção (true/false)
+ENABLE_SWAGGER_IN_PRODUCTION=false
+
+# Habilitar logs detalhados de queries SQL (true/false)
+DEBUG_SQL=false

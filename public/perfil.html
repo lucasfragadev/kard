@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <meta name="description" content="Kard - Perfil do Usuário. Gerencie suas informações pessoais e preferências.">
+    <meta name="keywords" content="perfil, configurações, kard">
+    
+    <meta property="og:url" content="https://kard-app.onrender.com/perfil.html">
+    <meta property="og:title" content="Kard - Perfil do Usuário">
+    
+    <meta name="twitter:url" content="https://kard-app.onrender.com/perfil.html">
+    <meta name="twitter:title" content="Kard - Perfil do Usuário">
+    
+    <link rel="canonical" href="https://kard-app.onrender.com/perfil.html">
+    
+    <title>Kard - Perfil</title>
+    <link href="css/style.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-2xl flex flex-col items-center gap-4">
+            <div class="spinner"></div>
+            <p class="text-slate-700 dark:text-slate-300 font-medium">Carregando...</p>
+        </div>
+    </div>
+
+    <div class="min-h-screen p-4 md:p-8">
+        <div class="max-w-3xl mx-auto">
+            <header class="flex justify-between items-center mb-8 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg">
+                <h1 class="text-4xl font-bold text-indigo-600 dark:text-indigo-400">Meu Perfil</h1>
+                <div class="flex gap-2 items-center">
+                    <a href="/index.html" class="text-2xl p-2 hover:scale-110 transition-transform" title="Voltar para tarefas">📋</a>
+                    <button id="theme-toggle" class="text-2xl p-2 hover:scale-110 transition-transform">🌙</button>
+                </div>
+            </header>
+
+            <div id="feedback-message" class="hidden mb-6 p-4 rounded-lg" role="alert" aria-live="polite"></div>
+
+            <section class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg mb-6">
+                <h2 class="text-xl font-bold text-indigo-600 dark:text-indigo-400 mb-6">Dados Pessoais</h2>
+                <form id="profile-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nome Completo</label>
+                        <input type="text" id="user-name" name="nome" placeholder="Seu nome completo" 
+                            class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">E-mail</label>
+                        <input type="email" id="user-email" name="email" placeholder="seu@email.com" 
+                            class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100" 
+                            disabled>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">O e-mail não pode ser alterado</p>
+                    </div>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-lg font-bold transition-all">
+                        Salvar Alterações
+                    </button>
+                </form>
+            </section>
+
+            <section class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg mb-6">
+                <h2 class="text-xl font-bold text-indigo-600 dark:text-indigo-400 mb-6">Alterar Senha</h2>
+                <form id="password-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Senha Atual</label>
+                        <input type="password" id="current-password" placeholder="Digite sua senha atual" 
+                            class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nova Senha</label>
+                        <input type="password" id="new-password" placeholder="Digite sua nova senha (mín. 6 caracteres)" 
+                            class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Confirmar Nova Senha</label>
+                        <input type="password" id="confirm-password" placeholder="Confirme sua nova senha" 
+                            class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100">
+                    </div>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-lg font-bold transition-all">
+                        Alterar Senha
+                    </button>
+                </form>
+            </section>
+
+            <section class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg">
+                <h2 class="text-xl font-bold text-red-600 dark:text-red-400 mb-4">Zona de Perigo</h2>
+                <p class="text-slate-600 dark:text-slate-400 text-sm mb-4">
+                    Uma vez que você exclua sua conta, não há como voltar atrás. Por favor, tenha certeza.
+                </p>
+                <button id="btn-delete-account" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-bold transition-all">
+                    Excluir Conta
+                </button>
+            </section>
+        </div>
+    </div>
+
+    <div id="confirmation-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h3 id="modal-title" class="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4"></h3>
+            <p id="modal-message" class="text-slate-600 dark:text-slate-400 mb-6"></p>
+            <div class="flex gap-4">
+                <button id="modal-confirm" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold">
+                    Confirmar
+                </button>
+                <button id="modal-cancel" class="flex-1 bg-slate-300 hover:bg-slate-400 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-900 dark:text-slate-100 px-4 py-2 rounded-lg font-bold">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/perfil.js"></script>
+    <script src="js/theme.js"></script>
+</body>
+</html>

@@ -1,11 +1,5 @@
-export interface Atividade {
-  id: number;
-  data: string;
-  categoria: string;
-  descricao: string;
-  importante: boolean;
-  finalizada: boolean;
-  ordem: number,
-}
+// Este arquivo foi deprecado.
+// A lógica foi movida para atividades.service.ts
+// Mantido apenas para compatibilidade com possíveis imports antigos
 
-export const atividades: Atividade[] = [];
+export type { Atividade } from './atividades.service.js';

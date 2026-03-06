@@ -1,65 +1,131 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kard - Dashboard</title>
-    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Kard - Gerenciador de atividades e tarefas inteligente. Organize seu dia com facilidade e produtividade.">
+    <meta name="keywords" content="tarefas, atividades, produtividade, organização, kanban">
+    <meta name="author" content="Kard">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kard-app.onrender.com/">
+    <meta property="og:title" content="Kard - Gerenciador de Atividades">
+    <meta property="og:description" content="Kard - Gerenciador de atividades e tarefas inteligente. Organize seu dia com facilidade e produtividade.">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:site_name" content="Kard">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kard-app.onrender.com/">
+    <meta name="twitter:title" content="Kard - Gerenciador de Atividades">
+    <meta name="twitter:description" content="Kard - Gerenciador de atividades e tarefas inteligente. Organize seu dia com facilidade e produtividade.">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://kard-app.onrender.com/">
+    
+    <title>Kard - Gerenciador de Atividades</title>
+    <link href="css/style.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4F46E5">
 </head>
-<body class="bg-gray-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen p-4 md:p-8 transition-colors duration-300">
-    <div class="max-w-4xl mx-auto">
-        <header class="flex justify-between items-center mb-8">
-            <h1 class="text-4xl font-bold text-indigo-600 dark:text-indigo-400">Kard<span class="text-slate-800 dark:text-white">.</span></h1>
-            
-            <div class="flex items-center gap-4">
-                <button id="theme-toggle" class="text-2xl p-2 hover:scale-110 transition-transform">🌙</button>
-                <button id="btn-logout" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 px-4 py-2 rounded-lg text-sm transition-colors shadow-sm">Sair</button>
-            </div>
-        </header>
-
-        <section class="mb-10 bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg relative transition-colors duration-300">
-            
-            <div class="flex justify-between items-center mb-4">
-                <h2 id="form-title" class="text-indigo-600 dark:text-indigo-400 font-bold uppercase text-xs tracking-widest">Nova Atividade</h2>
-                <button id="btn-cancel" class="hidden text-xs text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white underline">Cancelar Edição</button>
-            </div>
-            
-            <input type="hidden" id="task-id">
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Título</label>
-                    <input type="text" id="task-title" placeholder="Resumo da tarefa..." 
-                        class="bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500 font-semibold transition-colors">
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Categoria</label>
-                    <input type="text" id="task-category" placeholder="Ex: Trabalho..." 
-                        class="bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-colors">
-                </div>
-            </div>
-
-            <div class="flex flex-col gap-2 mb-4">
-                <label class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Descrição / Detalhes</label>
-                <textarea id="task-desc" rows="2" placeholder="Adicione links, observações..." 
-                    class="bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500 resize-none text-sm text-slate-700 dark:text-slate-300 transition-colors"></textarea>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                <div class="md:col-span-2 flex flex-col gap-2">
-                    <label class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase">Data</label>
-                    <input type="date" id="task-date" class="bg-gray-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-600 dark:text-slate-400 transition-colors">
-                </div>
-                
-                <button id="btn-save" class="md:col-span-2 h-[50px] bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold transition-all shadow-md hover:shadow-lg flex justify-center items-center gap-2">
-                    <span>Salvar Atividade</span>
-                </button>
-            </div>
-        </section>
-
-        <div id="task-list" class="grid gap-3 pb-20"></div>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors duration-300">
+    
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-2xl flex flex-col items-center gap-4">
+            <div class="spinner"></div>
+            <p class="text-slate-700 dark:text-slate-300 font-medium">Carregando...</p>
+        </div>
     </div>
+
+    <div id="network-status" class="hidden fixed top-4 right-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 shadow-lg z-30 flex items-center gap-2"></div>
+
+    <div class="min-h-screen p-4 md:p-8">
+        <div class="max-w-4xl mx-auto">
+            <header class="flex justify-between items-center mb-8 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg transition-colors duration-300">
+                <h1 class="text-4xl font-bold text-indigo-600 dark:text-indigo-400">Kard<span class="text-slate-800 dark:text-white">.</span></h1>
+                <div class="flex gap-2 items-center">
+                    <a href="/dashboard.html" class="text-2xl p-2 hover:scale-110 transition-transform" title="Dashboard" aria-label="Dashboard">📊</a>
+                    <a href="/perfil.html" class="text-2xl p-2 hover:scale-110 transition-transform" title="Perfil" aria-label="Perfil">👤</a>
+                    <button id="theme-toggle" class="text-2xl p-2 hover:scale-110 transition-transform" title="Alternar Tema" aria-label="Alternar Tema">🌙</button>
+                    <button id="btn-logout" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-all" title="Sair" aria-label="Sair">Sair</button>
+                </div>
+            </header>
+
+            <section class="mb-6 bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg transition-colors duration-300">
+                <form id="task-form" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="date" id="task-date" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100" required aria-label="Data da atividade">
+                        <input type="text" id="task-category" placeholder="Categoria" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100" required aria-label="Categoria">
+                    </div>
+                    <textarea id="task-description" placeholder="Descrição da atividade" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100" rows="3" required aria-label="Descrição"></textarea>
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="task-priority" class="w-5 h-5 text-indigo-600 border-slate-300 rounded focus:ring-2 focus:ring-indigo-500">
+                            <span class="text-slate-700 dark:text-slate-300">Importante</span>
+                        </label>
+                        <div class="flex gap-2 ml-auto">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-md" aria-label="Adicionar atividade">Adicionar</button>
+                            <button type="button" id="btn-cancel" class="hidden text-xs text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white underline" title="Cancelar edição">Cancelar Edição</button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+
+            <section class="mb-6 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg transition-colors duration-300">
+                <input type="text" id="search-input" placeholder="🔍 Buscar atividades..." class="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100" aria-label="Buscar atividades">
+            </section>
+
+            <section class="mb-6 bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-lg transition-colors duration-300">
+                <div class="flex gap-2 flex-wrap">
+                    <select id="filter-status" class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100" aria-label="Filtrar por status">
+                        <option value="all">Todas</option>
+                        <option value="pending">Pendentes</option>
+                        <option value="completed">Concluídas</option>
+                    </select>
+                    <select id="filter-priority" class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100" aria-label="Filtrar por prioridade">
+                        <option value="all">Todas Prioridades</option>
+                        <option value="high">Alta Prioridade</option>
+                        <option value="normal">Normal</option>
+                    </select>
+                    <select id="sort-by" class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100" aria-label="Ordenar por">
+                        <option value="date">Data</option>
+                        <option value="priority">Prioridade</option>
+                        <option value="category">Categoria</option>
+                    </select>
+                </div>
+            </section>
+
+            <section>
+                <div id="task-list" class="space-y-3"></div>
+                <div id="empty-state" class="hidden text-center py-12">
+                    <p class="text-slate-500 dark:text-slate-400 text-lg">Nenhuma atividade encontrada</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registrado com sucesso:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Falha ao registrar Service Worker:', error);
+                    });
+            });
+        }
+    </script>
     <script src="js/main.js"></script>
     <script src="js/theme.js"></script>
+    <script src="js/drag-drop.js"></script>
+    <script src="js/keyboard.js"></script>
+    <script src="js/notifications.js"></script>
 </body>
 </html>

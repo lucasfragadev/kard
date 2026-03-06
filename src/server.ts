@@ -1,163 +1,52 @@
-import 'dotenv/config';
-import bcrypt from 'bcryptjs';
-import express from 'express';
-import jwt from 'jsonwebtoken';
-import { pool } from './database.js';
-import { authenticateToken } from './auth.middleware.js';
-import rateLimit from 'express-rate-limit';
-import helmet from 'helmet';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import { testDatabaseConnection } from './database.js';
+import atividadesRoutes from './routes/atividades.routes.js';
+import authRoutes from './routes/auth.routes.js';
+import comentariosRoutes from './routes/comentarios.routes.js';
+import { errorHandler } from './middlewares/errorHandler.js';
+import { versionHeader } from './middlewares/versionHeader.js';
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Configuração de Segurança (Helmet + CORS)
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "https://cdn.tailwindcss.com"],
-      scriptSrcAttr: ["'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:"],
-      connectSrc: ["'self'"],
-    },
-  },
-}));
+// Middlewares globais
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json());
 app.use(express.static('public'));
+app.use(versionHeader);
 
-// Rate Limiting
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
-app.use(limiter);
+// Health check endpoint
+app.get('/health', (req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: process.env.API_VERSION || '1.0.0'
+  });
+});
 
-// --- ROTAS DE AUTENTICAÇÃO ---
+// Rotas V1 (Versão atual)
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/atividades', atividadesRoutes);
+app.use('/api/v1/comentarios', comentariosRoutes);
 
-app.post('/auth/registro', async (req, res) => {
-  const { nome, email, senha } = req.body;
+// Middleware de tratamento de erros (deve ser o último)
+app.use(errorHandler);
 
-  if (!nome || !email || !senha) {
-    return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
-  }
-
-  if (senha.length < 6) {
-    return res.status(400).json({ error: 'A senha deve ter no mínimo 6 caracteres.' });
-  }
-
-  try {
-    // 1. Verifica se já existe
-    const userCheck = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email.toLowerCase().trim()]);
-    if (userCheck.rows.length > 0) {
-      return res.status(400).json({ error: 'Este e-mail já está em uso.' });
-    }
-
-    // 2. Criptografa a senha
-    const salt = await bcrypt.genSalt(10);
-    const senhaHash = await bcrypt.hash(senha, salt);
-
-    // 3. Cria o usuário
-    const query = `
-      INSERT INTO usuarios (nome, email, senha) 
-      VALUES ($1, $2, $3) 
-      RETURNING id, nome, email;
-    `;
-    const result = await pool.query(query, [nome.trim(), email.toLowerCase().trim(), senhaHash]);
-
-    return res.status(201).json({
-      message: 'Usuário criado com sucesso!',
-      usuario: result.rows[0]
+// Testar conexão com o banco de dados antes de iniciar o servidor
+testDatabaseConnection()
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`🚀 Server rodando em http://localhost:${port}`);
+      console.log(`📊 Health check disponível em http://localhost:${port}/health`);
+      console.log(`🔖 API Version: ${process.env.API_VERSION || '1.0.0'}`);
     });
-
-  } catch (error) {
-    console.error('Erro no registro:', error);
-    return res.status(500).json({ error: 'Erro interno ao criar conta.' });
-  }
-});
-
-app.post('/auth/login', async (req, res) => {
-  const { email, senha } = req.body;
-  try {
-    const result = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email.toLowerCase().trim()]);
-    const usuario = result.rows[0];
-    if (!usuario || !(await bcrypt.compare(senha, usuario.senha))) {
-      return res.status(401).json({ error: 'Credenciais inválidas.' });
-    }
-    const token = jwt.sign({ id: usuario.id, nome: usuario.nome }, process.env.JWT_SECRET!, { expiresIn: '8h' });
-    return res.json({ token, usuario: { id: usuario.id, nome: usuario.nome } });
-  } catch (error) { return res.status(500).json({ error: 'Erro no login.' }); }
-});
-
-// --- ROTAS DE ATIVIDADES ---
-
-// GET: Listar
-app.get('/atividades', authenticateToken, async (req, res) => {
-  try {
-    const query = `
-      SELECT * FROM atividades 
-      WHERE usuario_id = $1 
-      ORDER BY importante DESC, id DESC
-    `;
-    const result = await pool.query(query, [req.user!.id]);
-    res.json(result.rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erro ao buscar atividades" });
-  }
-});
-
-// POST: Criar (Agora com Titulo e Descricao)
-app.post('/atividades', authenticateToken, async (req, res) => {
-  const { titulo, descricao, categoria, data } = req.body;
-
-  // Validação básica
-  if (!titulo) return res.status(400).json({ error: 'Título é obrigatório' });
-
-  const query = `
-    INSERT INTO atividades (titulo, descricao, categoria, data, usuario_id, importante, finalizada) 
-    VALUES ($1, $2, $3, $4, $5, false, false) 
-    RETURNING *`;
-
-  try {
-    const result = await pool.query(query, [titulo, descricao || '', categoria, data, req.user!.id]);
-    res.status(201).json(result.rows[0]);
-  } catch (err) { res.status(500).json({ error: "Erro ao criar" }); }
-});
-
-// PUT: Editar (NOVA ROTA)
-app.put('/atividades/:id', authenticateToken, async (req, res) => {
-  const { id } = req.params;
-  const { titulo, descricao, categoria, data } = req.body;
-
-  const query = `
-    UPDATE atividades 
-    SET titulo = $1, descricao = $2, categoria = $3, data = $4
-    WHERE id = $5 AND usuario_id = $6
-    RETURNING *`;
-
-  try {
-    const result = await pool.query(query, [titulo, descricao, categoria, data, id, req.user!.id]);
-    if (result.rowCount === 0) return res.status(404).json({ error: "Atividade não encontrada." });
-    res.json(result.rows[0]);
-  } catch (err) { res.status(500).json({ error: "Erro ao editar" }); }
-});
-
-// PATCH: Finalizar/Reabrir
-app.patch('/atividades/:id/finalizar', authenticateToken, async (req, res) => {
-  await pool.query('UPDATE atividades SET finalizada = NOT finalizada WHERE id = $1 AND usuario_id = $2', [req.params.id, req.user!.id]);
-  res.sendStatus(200);
-});
-
-// PATCH: Prioridade
-app.patch('/atividades/:id/prioridade', authenticateToken, async (req, res) => {
-  await pool.query('UPDATE atividades SET importante = NOT importante WHERE id = $1 AND usuario_id = $2', [req.params.id, req.user!.id]);
-  res.sendStatus(200);
-});
-
-// DELETE: Excluir
-app.delete('/atividades/:id', authenticateToken, async (req, res) => {
-  await pool.query('DELETE FROM atividades WHERE id = $1 AND usuario_id = $2', [req.params.id, req.user!.id]);
-  res.sendStatus(200);
-});
-
-app.listen(port, () => console.log(`🚀 Server rodando em http://localhost:${port}`));
+  })
+  .catch((error) => {
+    console.error('❌ Erro ao conectar com o banco de dados:', error);
+    process.exit(1);
+  });
