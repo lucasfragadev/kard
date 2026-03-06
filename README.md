@@ -43,7 +43,6 @@ Sistema inteligente de gerenciamento de atividades e tarefas desenvolvido com No
 ### Autenticação e Segurança
 - 🔐 Sistema de autenticação JWT
 - 👤 Gerenciamento de perfil de usuário
-- 🔑 Recuperação de senha via e-mail
 - 🛡️ Rate limiting para proteção contra ataques
 - 🔒 Blacklist de tokens
 - 🔄 Refresh tokens
@@ -76,7 +75,6 @@ Sistema inteligente de gerenciamento de atividades e tarefas desenvolvido com No
 - **JWT** - Autenticação baseada em tokens
 - **Bcrypt** - Hash de senhas
 - **Winston** - Sistema de logs
-- **Nodemailer** - Envio de e-mails
 - **PDFKit** - Geração de PDFs
 
 ### Frontend
@@ -152,15 +150,6 @@ JWT_REFRESH_SECRET=seu_refresh_secret_muito_seguro_aqui
 JWT_EXPIRES_IN=1h
 JWT_REFRESH_EXPIRES_IN=7d
 
-# E-mail (SMTP)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=seu-email@gmail.com
-SMTP_PASSWORD=sua-senha-de-app
-SMTP_FROM_NAME=Kard
-SMTP_FROM_EMAIL=seu-email@gmail.com
-
 # Frontend
 FRONTEND_URL=http://localhost:3000
 
@@ -168,6 +157,12 @@ FRONTEND_URL=http://localhost:3000
 MAX_FILE_SIZE=10485760
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
+
+# Cache
+CACHE_TTL=60000
+
+# Logs
+LOG_LEVEL=info
 ```
 
 ### 4. Configure o banco de dados
@@ -306,7 +301,8 @@ kard/
 │   │   ├── keyboard.js        # Atalhos de teclado
 │   │   ├── drag-drop.js       # Drag and drop
 │   │   ├── notifications.js   # Notificações
-│   │   └── dashboard.js       # Dashboard
+│   │   ├── dashboard.js       # Dashboard
+│   │   └── perfil.js          # Perfil do usuário
 │   ├── icons/                  # Ícones PWA
 │   ├── screenshots/            # Screenshots do app
 │   ├── index.html             # Página principal
@@ -314,8 +310,6 @@ kard/
 │   ├── registro.html          # Página de registro
 │   ├── dashboard.html         # Dashboard
 │   ├── perfil.html            # Perfil do usuário
-│   ├── recuperar-senha.html   # Recuperação de senha
-│   ├── redefinir-senha.html   # Redefinição de senha
 │   ├── manifest.json          # Manifest PWA
 │   └── sw.js                  # Service Worker
 ├── src/                        # Código fonte (backend)
@@ -328,7 +322,6 @@ kard/
 │   │   ├── atividades.service.ts
 │   │   ├── auth.service.ts
 │   │   ├── comentarios.service.ts
-│   │   ├── email.service.ts
 │   │   ├── token.service.ts
 │   │   ├── token-blacklist.service.ts
 │   │   └── upload.service.ts
@@ -344,15 +337,23 @@ kard/
 │   │   └── versionHeader.ts
 │   ├── validators/            # Validadores
 │   │   ├── atividades.validator.ts
-│   │   └── auth.validator.ts
+│   │   ├── auth.validator.ts
+│   │   └── perfil.validator.ts
 │   ├── migrations/            # Migrations do banco
 │   ├── utils/                 # Utilitários
 │   │   ├── logger.ts
-│   │   └── exporter.ts
+│   │   ├── exporter.ts
+│   │   └── queryBuilder.ts
 │   ├── cache/                 # Sistema de cache
 │   │   └── cache.service.ts
 │   ├── docs/                  # Documentação
 │   │   └── swagger.ts
+│   ├── config/                # Configurações
+│   │   └── env.ts
+│   ├── constants/             # Constantes
+│   │   └── errors.ts
+│   ├── dtos/                  # DTOs
+│   │   └── perfil.dto.ts
 │   ├── database.ts            # Configuração do banco
 │   └── server.ts              # Entrada do servidor
 ├── scripts/                    # Scripts auxiliares
@@ -382,8 +383,6 @@ POST   /api/v1/auth/registro          # Criar nova conta
 POST   /api/v1/auth/login             # Login
 POST   /api/v1/auth/refresh           # Renovar token
 POST   /api/v1/auth/logout            # Logout
-POST   /api/v1/auth/forgot-password   # Solicitar recuperação de senha
-POST   /api/v1/auth/reset-password    # Redefinir senha
 GET    /api/v1/auth/me                # Obter dados do usuário
 PUT    /api/v1/auth/profile           # Atualizar perfil
 DELETE /api/v1/auth/delete-account    # Excluir conta
@@ -401,6 +400,7 @@ PATCH  /api/v1/atividades/:id/toggle  # Toggle status
 PATCH  /api/v1/atividades/:id/priority # Alterar prioridade
 POST   /api/v1/atividades/export      # Exportar atividades
 POST   /api/v1/atividades/import      # Importar atividades
+POST   /api/v1/atividades/:id/reorder # Reordenar atividades
 ```
 
 ### Comentários
@@ -410,6 +410,7 @@ GET    /api/v1/comentarios/atividade/:atividadeId  # Listar comentários
 POST   /api/v1/comentarios                         # Criar comentário
 PUT    /api/v1/comentarios/:id                     # Atualizar comentário
 DELETE /api/v1/comentarios/:id                     # Excluir comentário
+GET    /api/v1/comentarios/:id/count               # Contar comentários
 ```
 
 ### Health Check
@@ -429,6 +430,8 @@ GET    /health                        # Status do servidor
 - **Token Blacklist** para logout seguro
 - **HTTPS** recomendado em produção
 - **Variáveis de ambiente** para dados sensíveis
+- **Proteção contra SQL Injection** com queries parametrizadas
+- **Sanitização de inputs** do usuário
 
 ## ⚡ Performance
 
@@ -440,6 +443,8 @@ GET    /health                        # Status do servidor
 - **Service Worker** para cache offline
 - **Connection pooling** no PostgreSQL
 - **Graceful shutdown** para não perder dados
+- **Minificação** de arquivos CSS e JavaScript
+- **Paginação** e carregamento incremental
 
 ## ♿ Acessibilidade
 
@@ -451,6 +456,8 @@ GET    /health                        # Status do servidor
 - **Focus visible** em todos os elementos
 - **Screen reader** friendly
 - **Conformidade WCAG 2.1 AA**
+- **Mensagens de erro** claras e descritivas
+- **Touch targets** com tamanho mínimo de 44x44px
 
 ## 🌐 Internacionalização
 
@@ -465,9 +472,10 @@ O Kard é um PWA completo com:
 - ✅ Instalável em dispositivos móveis e desktop
 - ✅ Funciona offline
 - ✅ Sincronização em background
-- ✅ Notificações push
+- ✅ Notificações de prazos próximos
 - ✅ Ícones e splash screens
 - ✅ Manifest completo
+- ✅ Service Worker otimizado
 
 ## 🧪 Testes
 
@@ -519,7 +527,7 @@ Este projeto está sob a licença ISC. Veja o arquivo LICENSE para mais detalhes
 
 ## 📞 Suporte
 
-Para suporte, envie um e-mail para suporte@kard.app ou abra uma issue no GitHub.
+Para suporte, abra uma issue no GitHub.
 
 ## 🗺️ Roadmap
 
@@ -533,6 +541,9 @@ Para suporte, envie um e-mail para suporte@kard.app ou abra uma issue no GitHub.
 - [ ] API GraphQL
 - [ ] Testes automatizados completos
 - [ ] CI/CD pipeline
+- [ ] Suporte a subtarefas
+- [ ] Tags personalizadas
+- [ ] Compartilhamento de atividades
 
 ---
 
