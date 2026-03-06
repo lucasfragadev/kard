@@ -91,7 +91,7 @@ class CacheService {
   /**
    * Remove um valor do cache
    */
-  del(key: string | string[]): number {
+  delete(key: string | string[]): number {
     try {
       return this.cache.del(key);
     } catch (error) {

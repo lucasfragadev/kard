@@ -37,12 +37,16 @@ export async function compararSenha(senha: string, hash: string): Promise<boolea
 
 // Gerar token JWT
 export function gerarToken(payload: { id: number; email: string }): string {
-  return jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: process.env.JWT_EXPIRES_IN || '1h' });
+  const secret = process.env.JWT_SECRET as string;
+  const expiresIn = process.env.JWT_EXPIRES_IN || '1h';
+  return jwt.sign(payload, secret, { expiresIn });
 }
 
 // Gerar refresh token
 export function gerarRefreshToken(payload: { id: number; email: string }): string {
-  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET as string, { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' });
+  const secret = process.env.JWT_REFRESH_SECRET as string;
+  const expiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+  return jwt.sign(payload, secret, { expiresIn });
 }
 
 // Registrar usuário

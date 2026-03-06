@@ -72,7 +72,7 @@ export function importFromCSV(csvData: string): any[] {
       const atividade: any = {};
       
       header.forEach((key, index) => {
-        let value = values[index].trim();
+        let value: any = values[index].trim();
         
         // Converter valores booleanos
         if (key === 'importante' || key === 'finalizada') {

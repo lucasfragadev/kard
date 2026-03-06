@@ -6,27 +6,34 @@ import {
   atualizarAtividade,
   removerAtividade,
   toggleStatusAtividade,
-  atualizarPrioridadeAtividade,
+  togglePrioridadeAtividade,
+  reordenarAtividades,
 } from '../services/atividades.service.js';
 import { validarCriacaoAtividade, validarAtualizacaoAtividade } from '../validators/atividades.validator.js';
 import { exportToJSON, exportToCSV, exportToPDF } from '../utils/exporter.js';
-import { logger } from '../utils/logger.js';
+import logger from '../utils/logger.js';
 
 const MAX_EXPORT_RECORDS = 10000;
 
 export const listar = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const usuarioId = (req as any).user.id;
-    const { categoria, finalizada, importante, data } = req.query as any;
+    const { categoria, finalizada, importante, data } = req.query;
+
+    // Garantir que os valores sejam strings
+    const categoriaStr = Array.isArray(categoria) ? categoria[0] : categoria;
+    const finalizadaStr = Array.isArray(finalizada) ? finalizada[0] : finalizada;
+    const importanteStr = Array.isArray(importante) ? importante[0] : importante;
+    const dataStr = Array.isArray(data) ? data[0] : data;
 
     let atividades;
 
-    if (categoria || finalizada !== undefined || importante !== undefined || data) {
+    if (categoriaStr || finalizadaStr !== undefined || importanteStr !== undefined || dataStr) {
       atividades = await buscarAtividadesComFiltros(usuarioId, {
-        categoria: categoria as string,
-        finalizada: finalizada === 'true',
-        importante: importante === 'true',
-        data: data as string,
+        categoria: categoriaStr as string,
+        finalizada: finalizadaStr === 'true',
+        importante: importanteStr === 'true',
+        data: dataStr as string,
       });
     } else {
       atividades = await buscarAtividades(usuarioId);
@@ -47,7 +54,7 @@ export const criar = async (req: Request, res: Response, next: NextFunction) => 
     const usuarioId = (req as any).user.id;
     const { data, categoria, descricao, importante = false } = req.body;
 
-    const validacao = validarCriacaoAtividade({ data, categoria, descricao, importante: importante || false });
+    const validacao = validarCriacaoAtividade({ data, categoria, descricao, importante });
 
     if (!validacao.success) {
       res.status(400).json({
@@ -170,7 +177,7 @@ export const togglePrioridade = async (req: Request, res: Response, next: NextFu
     const usuarioId = (req as any).user.id;
     const atividadeId = parseInt(req.params.id);
 
-    const atividadeAtualizada = await atualizarPrioridadeAtividade(atividadeId, usuarioId);
+    const atividadeAtualizada = await togglePrioridadeAtividade(atividadeId, usuarioId);
 
     if (!atividadeAtualizada) {
       res.status(404).json({
@@ -190,26 +197,57 @@ export const togglePrioridade = async (req: Request, res: Response, next: NextFu
   }
 };
 
+export const reordenar = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const usuarioId = (req as any).user.id;
+    const { ordens } = req.body;
+
+    if (!ordens || !Array.isArray(ordens)) {
+      res.status(400).json({
+        success: false,
+        error: 'Ordens inválidas',
+      });
+      return;
+    }
+
+    await reordenarAtividades(usuarioId, ordens);
+
+    res.status(200).json({
+      success: true,
+      message: 'Atividades reordenadas com sucesso',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const exportar = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const usuarioId = (req as any).user.id;
-    const format = (req.query.format as string)?.toLowerCase() || 'json';
+    const formatQuery = req.query.format;
+    const format = (Array.isArray(formatQuery) ? formatQuery[0] : formatQuery)?.toLowerCase() || 'json';
     const { categoria, finalizada, importante, data } = req.query;
+
+    // Garantir que os valores sejam strings
+    const categoriaStr = Array.isArray(categoria) ? categoria[0] : categoria;
+    const finalizadaStr = Array.isArray(finalizada) ? finalizada[0] : finalizada;
+    const importanteStr = Array.isArray(importante) ? importante[0] : importante;
+    const dataStr = Array.isArray(data) ? data[0] : data;
 
     logger.info('Exportação iniciada', {
       usuarioId,
       format,
-      filters: { categoria, finalizada, importante, data },
+      filters: { categoria: categoriaStr, finalizada: finalizadaStr, importante: importanteStr, data: dataStr },
     });
 
     let atividades;
 
-    if (categoria || finalizada !== undefined || importante !== undefined || data) {
+    if (categoriaStr || finalizadaStr !== undefined || importanteStr !== undefined || dataStr) {
       atividades = await buscarAtividadesComFiltros(usuarioId, {
-        categoria: categoria as string,
-        finalizada: finalizada === 'true',
-        importante: importante === 'true',
-        data: data as string,
+        categoria: categoriaStr as string,
+        finalizada: finalizadaStr === 'true',
+        importante: importanteStr === 'true',
+        data: dataStr as string,
       });
     } else {
       atividades = await buscarAtividades(usuarioId);

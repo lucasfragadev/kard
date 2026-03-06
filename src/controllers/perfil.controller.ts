@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { pool } from '../database.js';
-import { validarPreferencias } from '../validators/perfil.validator.js';
-import { logger } from '../utils/logger.js';
-import { CacheService } from '../cache/cache.service.js';
+import { validatePreferences } from '../validators/perfil.validator.js';
+import logger from '../utils/logger.js';
+import { generalCache } from '../cache/cache.service.js';
 import { buildUpdateQuery, validateFieldSizes } from '../utils/queryBuilder.js';
 import { UpdateProfileDto, UserProfileDto } from '../dtos/perfil.dto.js';
 
@@ -19,7 +19,7 @@ export const obterPerfil = async (
     const cacheKey = `user:profile:${usuarioId}`;
 
     // Tentar obter do cache
-    const cached = CacheService.get<UserProfileDto>(cacheKey);
+    const cached = generalCache.get<UserProfileDto>(cacheKey);
     if (cached) {
       logger.info('Perfil obtido do cache', { userId: usuarioId });
       res.status(200).json({
@@ -62,7 +62,7 @@ export const obterPerfil = async (
     }
 
     // Salvar no cache (5 minutos)
-    CacheService.set(cacheKey, usuario, { ttl: 300000 });
+    generalCache.set(cacheKey, usuario, { ttl: 300 });
 
     logger.info('Perfil obtido com sucesso', { userId: usuarioId });
 
@@ -148,7 +148,7 @@ export const atualizarPerfil = async (
         return;
       }
 
-      if (!validarPreferencias(preferencias)) {
+      if (!validatePreferences(preferencias)) {
         res.status(400).json({
           success: false,
           error: 'Estrutura de preferências inválida. Verifique os campos: theme (light|dark|auto|high-contrast), notifications (email, push, deadline), language'
@@ -203,7 +203,7 @@ export const atualizarPerfil = async (
 
     // Invalidar cache
     const cacheKey = `user:profile:${usuarioId}`;
-    CacheService.delete(cacheKey);
+    generalCache.delete(cacheKey);
 
     logger.info('Perfil atualizado com sucesso', { 
       userId: usuarioId,

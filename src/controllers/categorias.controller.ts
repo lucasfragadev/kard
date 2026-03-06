@@ -16,7 +16,8 @@ export async function listar(req: Request, res: Response): Promise<void> {
 
 export async function buscarPorId(req: Request, res: Response): Promise<void> {
   const usuarioId = (req as any).user.id;
-  const categoriaId = parseInt(req.params.id);
+  const categoriaIdParam = req.params.id;
+  const categoriaId = parseInt(Array.isArray(categoriaIdParam) ? categoriaIdParam[0] : categoriaIdParam);
 
   if (isNaN(categoriaId)) {
     res.status(400).json({
@@ -84,7 +85,8 @@ export async function criar(req: Request, res: Response): Promise<void> {
 
 export async function atualizar(req: Request, res: Response): Promise<void> {
   const usuarioId = (req as any).user.id;
-  const categoriaId = parseInt(req.params.id);
+  const categoriaIdParam = req.params.id;
+  const categoriaId = parseInt(Array.isArray(categoriaIdParam) ? categoriaIdParam[0] : categoriaIdParam);
   const { nome, cor, icone, descricao, ativa } = req.body;
 
   if (isNaN(categoriaId)) {
@@ -144,7 +146,8 @@ export async function atualizar(req: Request, res: Response): Promise<void> {
 
 export async function deletar(req: Request, res: Response): Promise<void> {
   const usuarioId = (req as any).user.id;
-  const categoriaId = parseInt(req.params.id);
+  const categoriaIdParam = req.params.id;
+  const categoriaId = parseInt(Array.isArray(categoriaIdParam) ? categoriaIdParam[0] : categoriaIdParam);
 
   if (isNaN(categoriaId)) {
     res.status(400).json({
@@ -182,7 +185,8 @@ export async function deletar(req: Request, res: Response): Promise<void> {
 
 export async function toggleAtiva(req: Request, res: Response): Promise<void> {
   const usuarioId = (req as any).user.id;
-  const categoriaId = parseInt(req.params.id);
+  const categoriaIdParam = req.params.id;
+  const categoriaId = parseInt(Array.isArray(categoriaIdParam) ? categoriaIdParam[0] : categoriaIdParam);
 
   if (isNaN(categoriaId)) {
     res.status(400).json({
