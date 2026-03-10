@@ -1,13 +1,13 @@
 /**
- * KARD - Main Script V10 (UI/UX Limpo com Ícones Lucide)
+ * KARD - Main Script V11 (Refinamento UI)
  */
 
 const token = localStorage.getItem('kard_token');
 if (!token) window.location.href = '/login.html';
 
 let tasksCache = [];
+let mainEditor;
 
-// --- BIBLIOTECA DE ÍCONES (LUCIDE) ---
 const LucideIcons = {
     square: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/></svg>`,
     checkSquare: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 12 2 2 4-4"/></svg>`,
@@ -15,17 +15,35 @@ const LucideIcons = {
     calendar: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>`,
     edit: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>`,
     trash: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>`,
-    note: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>`
+    note: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>`,
+    send: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>`
 };
+
+const quillToolbarOptions = [
+    ['bold', 'italic', 'underline', 'strike'],
+    ['link'],
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    ['clean']
+];
 
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-logout')?.addEventListener('click', logout);
     document.getElementById('btn-save')?.addEventListener('click', handleNewTask);
-    
+
     const dateInput = document.getElementById('task-date');
     if (dateInput && !dateInput.value) {
         dateInput.value = new Date().toISOString().split('T')[0];
     }
+
+    try {
+        if (typeof Quill !== 'undefined' && document.getElementById('editor-container')) {
+            mainEditor = new Quill('#editor-container', {
+                theme: 'snow',
+                placeholder: 'Adicione links, observações, listas...',
+                modules: { toolbar: quillToolbarOptions }
+            });
+        }
+    } catch (error) { console.error("Erro ao iniciar o editor:", error); }
 
     fetchTasks();
 });
@@ -36,7 +54,7 @@ async function fetchTasks() {
     try {
         const res = await fetch('/atividades', { headers: { 'Authorization': `Bearer ${token}` } });
         if (res.status === 401) return logout();
-        
+
         let data = await res.json();
 
         tasksCache = data.sort((a, b) => {
@@ -50,14 +68,14 @@ async function fetchTasks() {
         });
 
         renderTasks(tasksCache);
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error("Erro ao buscar tarefas:", err); }
 }
 
 // --- RENDERIZAÇÃO INTELIGENTE ---
 
 function renderTasks(tasks) {
     const list = document.getElementById('task-list');
-    
+
     const activeTasks = tasks.filter(t => !t.finalizada);
     const completedTasks = tasks.filter(t => t.finalizada);
 
@@ -87,61 +105,126 @@ function renderTasks(tasks) {
     list.innerHTML = htmlContent;
 }
 
-// Função auxiliar para gerar o HTML do card
 function createTaskCard(t) {
     return `
         <div id="card-${t.id}" class="mb-3 bg-white dark:bg-slate-800 p-5 rounded-lg border-2 transition-all duration-300 relative group
-            ${t.importante 
-                ? 'border-orange-500 dark:border-yellow-400 shadow-[0_4px_15px_-3px_rgba(249,115,22,0.4)] dark:shadow-[0_4px_20px_-3px_rgba(250,204,21,0.5)]' 
-                : 'border-slate-200 dark:border-slate-700'} 
+            ${t.importante
+            ? 'border-orange-500 dark:border-yellow-400 shadow-[0_4px_15px_-3px_rgba(249,115,22,0.4)] dark:shadow-[0_4px_20px_-3px_rgba(250,204,21,0.5)]'
+            : 'border-slate-200 dark:border-slate-700'} 
             ${t.finalizada ? 'grayscale-[0.8] opacity-80' : ''}">
             
-            <div class="flex justify-between items-start mb-3">
-                <div class="flex items-center gap-3 w-full">
-                    
-                    <button onclick="toggleTask(${t.id})" class="flex-shrink-0 transition-colors hover:text-indigo-600 dark:hover:text-indigo-400 ${t.finalizada ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}" title="${t.finalizada ? 'Reabrir Tarefa' : 'Concluir Tarefa'}">
-                        ${t.finalizada ? LucideIcons.checkSquare : LucideIcons.square}
-                    </button>
-                    
-                    <div class="w-full pr-4">
+            <div class="flex items-start gap-3 w-full">
+                <button onclick="toggleTask(${t.id})" class="mt-1 flex-shrink-0 transition-colors hover:text-indigo-600 dark:hover:text-indigo-400 ${t.finalizada ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}" title="${t.finalizada ? 'Reabrir Tarefa' : 'Concluir Tarefa'}">
+                    ${t.finalizada ? LucideIcons.checkSquare : LucideIcons.square}
+                </button>
+                
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start gap-4">
                         <h3 class="${t.finalizada ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'} font-bold text-lg leading-tight break-all cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" onclick="toggleTask(${t.id})">
                             ${t.titulo || 'Sem Título'} 
                         </h3>
-                        <span class="text-[10px] uppercase tracking-widest text-indigo-700 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-slate-900 px-2 py-0.5 rounded mt-1 inline-block border border-indigo-100 dark:border-indigo-900/50">
+                        
+                        <button onclick="togglePriority(${t.id})" class="mt-0.5 flex-shrink-0 transition-all hover:scale-110 ${t.importante ? 'text-orange-500 dark:text-yellow-400' : 'text-slate-300 dark:text-slate-600 hover:text-orange-400 dark:hover:text-yellow-500'}" title="Marcar Prioridade">
+                            ${LucideIcons.flag(t.importante)}
+                        </button>
+                    </div>
+
+                    <div class="mt-1.5 mb-3">
+                        <span class="text-[10px] uppercase tracking-widest text-indigo-700 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-slate-900 px-2 py-0.5 rounded inline-block border border-indigo-100 dark:border-indigo-900/50">
                             ${t.categoria || 'GERAL'}
                         </span>
                     </div>
-                </div>
-                
-                <button onclick="togglePriority(${t.id})" class="transition-all hover:scale-110 ${t.importante ? 'text-orange-500 dark:text-yellow-400' : 'text-slate-300 dark:text-slate-600 hover:text-orange-400 dark:hover:text-yellow-500'}" title="Marcar Prioridade">
-                    ${LucideIcons.flag(t.importante)}
-                </button>
-            </div>
 
-            ${renderDescriptionLog(t.descricao)}
+                    ${renderDescriptionLog(t.descricao)}
 
-            <div class="flex justify-between items-center pl-9 pt-2 border-t border-slate-100 dark:border-slate-700/30 mt-2">
-                <span class="text-xs text-slate-500 dark:text-slate-500 font-mono flex items-center gap-1.5">
-                    ${LucideIcons.calendar} ${t.data}
-                </span>
-                <div class="flex gap-4">
-                    <button onclick="enableEditMode(${t.id})" class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5 text-sm font-bold group-hover:opacity-100 opacity-60">
-                        ${LucideIcons.edit} Editar
-                    </button>
-                    <button onclick="deleteTask(${t.id})" class="text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors flex items-center gap-1.5 text-sm font-bold group-hover:opacity-100 opacity-60">
-                        ${LucideIcons.trash}
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-500 dark:text-slate-500 font-mono flex items-center gap-1.5">
+                            ${LucideIcons.calendar} ${t.data}
+                        </span>
+                        <div class="flex gap-4">
+                            <button onclick="enableEditMode(${t.id})" class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-1.5 text-sm font-bold group-hover:opacity-100 opacity-60">
+                                ${LucideIcons.edit} Editar
+                            </button>
+                            <button onclick="deleteTask(${t.id})" class="text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors flex items-center gap-1.5 text-sm font-bold group-hover:opacity-100 opacity-60">
+                                ${LucideIcons.trash}
+                            </button>
+                        </div>
+                    </div>
+
+                    ${!t.finalizada ? `
+                    <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/30">
+                        <label class="text-[10px] uppercase text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1.5 mb-2">
+                            ${LucideIcons.note} <span>Adicionar Nota Rápida</span>
+                        </label>
+                        
+                        <div class="flex flex-col items-end gap-2">
+                            <textarea id="quick-note-${t.id}" placeholder="Escreva uma atualização rápida..." class="w-full bg-white dark:bg-slate-800 border border-indigo-200 dark:border-slate-600 rounded-lg p-3 text-slate-800 dark:text-white text-sm min-h-[80px] focus:ring-2 focus:ring-indigo-500 outline-none resize-y transition-colors"></textarea>
+                            
+                            <button onclick="saveQuickNote(${t.id})" class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold text-sm shadow-md transition-colors">
+                                Salvar
+                            </button>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                </div> </div> </div> `;
 }
 
 function renderDescriptionLog(desc) {
-    if (!desc) return '';
-    return `<div class="pl-9 mb-4 text-sm text-slate-600 dark:text-slate-300 space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-        ${desc.split('\n').map(line => line.trim() ? `<p class="border-l-2 border-slate-300 dark:border-slate-600 pl-3 hover:border-indigo-500 transition-colors">${line}</p>` : '').join('')}
+    if (!desc || desc === '<p><br></p>') return '';
+
+    let formattedDesc = desc;
+    if (!desc.includes('<p>')) {
+        formattedDesc = desc.replace(/\n/g, '<br>');
+    }
+
+    return `<div class="mb-2 text-sm text-slate-600 dark:text-slate-300 max-h-60 overflow-y-auto custom-scrollbar">
+        <div class="ql-editor p-0 border-l-2 border-slate-300 dark:border-slate-600 pl-3 -ml-3">${formattedDesc}</div>
     </div>`;
+}
+
+// --- FUNÇÃO PARA SALVAR NOTA RÁPIDA INLINE ---
+async function saveQuickNote(id) {
+    const noteInput = document.getElementById(`quick-note-${id}`);
+    if (!noteInput) return;
+
+    const newLog = noteInput.value.trim();
+    if (!newLog) return;
+
+    const task = tasksCache.find(t => t.id === id);
+    if (!task) return;
+
+    const now = new Date();
+    const timeStamp = `[${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')} às ${String(now.getHours()).padStart(2, '0')}h${String(now.getMinutes()).padStart(2, '0')}min]`;
+
+    const newLogHtml = newLog.replace(/\n/g, '<br>');
+    const formattedLog = `<p><br></p><p><strong>${timeStamp}</strong><br>${newLogHtml}</p>`;
+
+    let updatedDesc = task.descricao || '';
+    if (updatedDesc === '<p><br></p>') updatedDesc = '';
+    updatedDesc += formattedLog;
+
+    const btn = noteInput.nextElementSibling;
+    const originalBtnHtml = btn.innerHTML;
+    btn.innerHTML = 'Salvando...';
+
+    try {
+        const res = await fetch(`/atividades/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+                titulo: task.titulo,
+                categoria: task.categoria,
+                data: task.data,
+                descricao: updatedDesc
+            })
+        });
+
+        if (res.ok) fetchTasks();
+    } catch (err) {
+        console.error(err);
+        btn.innerHTML = originalBtnHtml;
+    }
 }
 
 // --- MODO DE EDIÇÃO ---
@@ -151,7 +234,7 @@ function enableEditMode(id) {
     if (!task) return;
 
     const card = document.getElementById(`card-${id}`);
-    
+
     let dateVal = '';
     if (task.data && task.data.includes('/')) {
         const [d, m, y] = task.data.split('/');
@@ -182,16 +265,11 @@ function enableEditMode(id) {
                     </div>
                 </div>
 
-                <div>
-                    <label class="text-[10px] uppercase text-slate-500 font-bold">Histórico</label>
-                    <textarea id="edit-history-${id}" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded p-2 text-slate-700 dark:text-slate-300 text-sm h-32 focus:border-indigo-500 outline-none leading-relaxed">${task.descricao || ''}</textarea>
-                </div>
-
-                <div class="bg-indigo-50 dark:bg-indigo-900/10 p-3 rounded border border-indigo-200 dark:border-indigo-500/20 mt-2">
-                    <label class="text-[10px] uppercase text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1.5 mb-2">
-                        ${LucideIcons.note} <span>Adicionar Nota Rápida</span>
-                    </label>
-                    <textarea id="edit-new-log-${id}" placeholder="Escreva uma atualização rápida..." class="w-full bg-white dark:bg-slate-800 border border-indigo-300 dark:border-indigo-500/30 rounded p-2 text-slate-800 dark:text-white text-sm h-16 focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
+                <div class="mt-2">
+                    <label class="text-[10px] uppercase text-slate-500 font-bold">Descrição / Histórico</label>
+                    <div class="bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 transition-colors">
+                        <div id="edit-editor-${id}" style="height: 150px;"></div>
+                    </div>
                 </div>
             </div>
 
@@ -203,6 +281,27 @@ function enableEditMode(id) {
             </div>
         </div>
     `;
+
+    try {
+        if (typeof Quill !== 'undefined') {
+            const editQuill = new Quill(`#edit-editor-${id}`, {
+                theme: 'snow',
+                modules: { toolbar: quillToolbarOptions }
+            });
+
+            let formattedDesc = task.descricao || '';
+            if (formattedDesc && !formattedDesc.includes('<p>')) {
+                formattedDesc = formattedDesc.replace(/\n/g, '<br>');
+            }
+
+            if (formattedDesc) {
+                editQuill.clipboard.dangerouslyPasteHTML(formattedDesc);
+            }
+            window[`editQuill_${id}`] = editQuill;
+        } else {
+            document.getElementById(`edit-editor-${id}`).innerHTML = `<p class="p-4 text-red-500 text-sm">Erro ao carregar o editor.</p>`;
+        }
+    } catch (e) { console.error(e); }
 }
 
 function cancelEdit() {
@@ -213,10 +312,10 @@ async function saveEdit(id) {
     const titulo = document.getElementById(`edit-title-${id}`).value;
     const categoria = document.getElementById(`edit-cat-${id}`).value;
     const dateRaw = document.getElementById(`edit-date-${id}`).value;
-    
-    let historyContent = document.getElementById(`edit-history-${id}`).value;
-    
-    const newLog = document.getElementById(`edit-new-log-${id}`).value;
+
+    const editQuill = window[`editQuill_${id}`];
+    let historyContent = editQuill ? editQuill.root.innerHTML : '';
+    if (historyContent === '<p><br></p>') historyContent = '';
 
     let dataFinal = dateRaw;
     if (dateRaw.includes('-')) {
@@ -224,25 +323,19 @@ async function saveEdit(id) {
         dataFinal = `${d}/${m}/${y}`;
     }
 
-    if (newLog.trim()) {
-        const now = new Date();
-        const timeStamp = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')} às ${String(now.getHours()).padStart(2, '0')}h${String(now.getMinutes()).padStart(2, '0')}min`;
-        const logEntry = `[${timeStamp}] ${newLog.trim()}`;
-        historyContent = historyContent.trim() ? `${historyContent.trim()}\n${logEntry}` : logEntry;
-    }
-
     try {
         const res = await fetch(`/atividades/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ 
-                titulo, 
-                categoria, 
-                data: dataFinal, 
-                descricao: historyContent 
+            body: JSON.stringify({
+                titulo,
+                categoria,
+                data: dataFinal,
+                descricao: historyContent
             })
         });
 
+        delete window[`editQuill_${id}`];
         if (res.ok) fetchTasks();
     } catch (err) { console.error(err); }
 }
@@ -252,8 +345,13 @@ async function saveEdit(id) {
 async function handleNewTask() {
     const titulo = document.getElementById('task-title').value.trim();
     const categoria = document.getElementById('task-category').value.trim() || 'Geral';
-    const descricao = document.getElementById('task-desc').value.trim(); 
     let data = document.getElementById('task-date').value;
+
+    let descricao = '';
+    if (mainEditor) {
+        descricao = mainEditor.root.innerHTML;
+        if (descricao === '<p><br></p>') descricao = '';
+    }
 
     if (!titulo) return alert("Título obrigatório");
 
@@ -268,10 +366,11 @@ async function handleNewTask() {
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ titulo, categoria, descricao, data })
         });
-        
+
         document.getElementById('task-title').value = '';
         document.getElementById('task-category').value = '';
-        document.getElementById('task-desc').value = '';
+        if (mainEditor) mainEditor.setContents([]);
+
         fetchTasks();
     } catch (err) { console.error(err); }
 }
@@ -299,3 +398,4 @@ window.deleteTask = deleteTask;
 window.enableEditMode = enableEditMode;
 window.saveEdit = saveEdit;
 window.cancelEdit = cancelEdit;
+window.saveQuickNote = saveQuickNote;
